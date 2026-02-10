@@ -958,9 +958,84 @@ class AsyncMemorizedFunc(MemorizedFunc):
 
 
 ###############################################################################
+# class `StoreBase`
+###############################################################################
+class StoreBase(Logger):
+    """A context object for storing Python objects"""
+
+    # ------------------------------------------------------------------------
+    # Public interface
+    # ------------------------------------------------------------------------
+
+    def __init__(
+        self,
+        location=None,
+        backend="local",
+        mmap_mode=None,
+        compress=False,
+        verbose=1,
+        backend_options=None,
+    ):
+        Logger.__init__(self)
+        self._verbose = verbose
+        self.mmap_mode = mmap_mode
+        self.timestamp = time.time()
+        self.backend = backend
+        self.compress = compress
+        if backend_options is None:
+            backend_options = {}
+        self.backend_options = backend_options
+
+        if compress and mmap_mode is not None:
+            warnings.warn("Compressed results cannot be memmapped", stacklevel=2)
+
+        self.location = location
+        if isinstance(location, str):
+            location = os.path.join(location, self._folder_name)
+
+        self.store_backend = _store_backend_factory(
+            backend,
+            location,
+            verbose=self._verbose,
+            backend_options=dict(
+                compress=compress, mmap_mode=mmap_mode, **backend_options
+            ),
+        )
+
+    def clear(self, warn=True):
+        """Erase the complete storage directory."""
+        if warn:
+            self.warn("Flushing completely the cache")
+        if self.store_backend is not None:
+            self.store_backend.clear()
+            return True
+        return False
+
+    # ------------------------------------------------------------------------
+    # Private `object` interface
+    # ------------------------------------------------------------------------
+
+    def __repr__(self):
+        return "{class_name}(location={location})".format(
+            class_name=self.__class__.__name__,
+            location=(
+                None if self.store_backend is None else self.store_backend.location
+            ),
+        )
+
+    def __getstate__(self):
+        """We don't store the timestamp when pickling, to avoid the hash
+        depending from it.
+        """
+        state = self.__dict__.copy()
+        state["timestamp"] = None
+        return state
+
+
+###############################################################################
 # class `Memory`
 ###############################################################################
-class Memory(Logger):
+class Memory(StoreBase):
     """A context object for caching a function's return value each time it
     is called with the same input arguments.
 
@@ -1002,44 +1077,7 @@ class Memory(Logger):
         the store backend.
     """
 
-    # ------------------------------------------------------------------------
-    # Public interface
-    # ------------------------------------------------------------------------
-
-    def __init__(
-        self,
-        location=None,
-        backend="local",
-        mmap_mode=None,
-        compress=False,
-        verbose=1,
-        backend_options=None,
-    ):
-        Logger.__init__(self)
-        self._verbose = verbose
-        self.mmap_mode = mmap_mode
-        self.timestamp = time.time()
-        self.backend = backend
-        self.compress = compress
-        if backend_options is None:
-            backend_options = {}
-        self.backend_options = backend_options
-
-        if compress and mmap_mode is not None:
-            warnings.warn("Compressed results cannot be memmapped", stacklevel=2)
-
-        self.location = location
-        if isinstance(location, str):
-            location = os.path.join(location, "joblib")
-
-        self.store_backend = _store_backend_factory(
-            backend,
-            location,
-            verbose=self._verbose,
-            backend_options=dict(
-                compress=compress, mmap_mode=mmap_mode, **backend_options
-            ),
-        )
+    _folder_name = "joblib"
 
     def cache(
         self,
@@ -1126,11 +1164,7 @@ class Memory(Logger):
 
     def clear(self, warn=True):
         """Erase the complete cache directory."""
-        if warn:
-            self.warn("Flushing completely the cache")
-        if self.store_backend is not None:
-            self.store_backend.clear()
-
+        if StoreBase.clear(self, warn):
             # As the cache is completely clear, make sure the _FUNCTION_HASHES
             # cache is also reset. Else, for a function that is present in this
             # table, results cached after this clear will be have cache miss
@@ -1188,26 +1222,6 @@ class Memory(Logger):
         if self.store_backend is None:
             return func(*args, **kwargs)
         return self.cache(func)(*args, **kwargs)
-
-    # ------------------------------------------------------------------------
-    # Private `object` interface
-    # ------------------------------------------------------------------------
-
-    def __repr__(self):
-        return "{class_name}(location={location})".format(
-            class_name=self.__class__.__name__,
-            location=(
-                None if self.store_backend is None else self.store_backend.location
-            ),
-        )
-
-    def __getstate__(self):
-        """We don't store the timestamp when pickling, to avoid the hash
-        depending from it.
-        """
-        state = self.__dict__.copy()
-        state["timestamp"] = None
-        return state
 
 
 ###############################################################################
