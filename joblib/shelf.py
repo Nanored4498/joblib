@@ -113,8 +113,7 @@ def shelve(data):
     """
     global _shelf
     if _shelf is None:
-        location = _get_temp_dir("")[0]
-        location = os.path.join(location, f"joblib_shelf_{os.getpid()}")
+        location = _get_temp_dir(f"joblib_shelf_{os.getpid()}")[0]
         _shelf = Shelf(location)
     return _shelf.shelve(data)
 
