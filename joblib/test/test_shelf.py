@@ -1,3 +1,7 @@
+"""
+Test the shelf module.
+"""
+
 import os
 from random import random
 
@@ -14,8 +18,6 @@ def test_shelve(data):
     id = (future.location, future.id)
     assert id in _futures
     assert _futures[id] == data
-    clear_shelf()
-    assert len(os.listdir(joblib.shelf._shelf.store_backend.location)) == 1
 
 
 def test_bad_shelf_access():
@@ -47,6 +49,10 @@ def test_shelve_parallel():
     expected = [sum(data[i : i + R]) for i in range(S)]
     out = Parallel(n_jobs=4)(delayed(f)(shelved_data, i) for i in range(S))
     assert out == expected
+    clear_shelf()
+    assert (
+        len(os.listdir(joblib.shelf._shelf.store_backend.location)) == 1
+    )  # contains .gitignore
 
 
 def test_shelf(tmpdir):

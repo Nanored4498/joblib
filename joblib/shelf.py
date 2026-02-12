@@ -11,11 +11,14 @@ _futures = dict()
 
 
 class ShelfFuture(object):
+    """A Future-like object referencing a shelved object."""
+
     def __init__(self, location, id):
         self.location = location
         self.id = id
 
     def result(self):
+        """Loads data from the shelf storage and returns it."""
         global _futures
         id = (self.location, self.id)
         value = _futures.get(id, None)
@@ -25,11 +28,18 @@ class ShelfFuture(object):
         return value
 
     def clear(self):
+        """Clear the referred data from the shelf."""
         _store_backend_factory("local", self.location).clear_item((self.id,))
 
 
 class Shelf(object):
-    """An object for storing values to be used later"""
+    """An object for storing values to be used later
+
+    Attributes
+    ----------
+    location: str
+        The location of the shelf folder.
+    """
 
     def __init__(self, location, /, backend_options=None):
         if backend_options is None:
@@ -38,11 +48,12 @@ class Shelf(object):
             "local",
             location,
             verbose=1,
-            backend_options=dict(compress=False, mmap_mode=None, **backend_options),
+            backend_options=dict(**backend_options),
         )
         atexit.register(self.close)
 
     def shelve(self, data):
+        """Add data to the Shelf and returns a future on the shelved data."""
         if self.store_backend is None:
             raise RuntimeError(
                 "You may be trying to shelve using an already closed shelf."
@@ -52,11 +63,14 @@ class Shelf(object):
         return ShelfFuture(self.store_backend.location, id)
 
     def clear(self):
-        """Erase the complete storage directory."""
+        """Clear all data added to this shelf.
+        New data can still be added to the shelf."""
         if self.store_backend is not None:
             self.store_backend.clear()
 
     def close(self):
+        """Close the shelf by removing the storage directory.
+        It is no longer possible to add data to the shelf."""
         if self.store_backend is not None:
             shutil.rmtree(self.store_backend.location)
             self.store_backend = None
@@ -77,6 +91,26 @@ class Shelf(object):
 
 
 def shelve(data):
+    """Shelves data and returns a future on it.
+
+    The data can then be deleted at any time by the script to save memory.
+    The future, a light-weight object, can be used later to reload the
+    initial data.
+
+    The data is kept in a store (either in shared memory or on a disk).
+    To retrieve the original data later, use the ``result`` method of
+    the returned future, this call will reload the initial data from the disk
+    and return it.
+
+    Parameters
+    ----------
+    data: any
+        The data to shelve.
+
+    Returns
+    -------
+        A future referencing the shelved data
+    """
     global _shelf
     if _shelf is None:
         location = _get_temp_dir("")[0]
@@ -86,5 +120,7 @@ def shelve(data):
 
 
 def clear_shelf():
+    """Clears all data previously shelved.
+    All future referencing data previously shelved are now invalid."""
     if _shelf is not None:
         _shelf.clear()
