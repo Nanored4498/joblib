@@ -1,6 +1,8 @@
+import os
 from random import random
 
-from joblib import Parallel, delayed, shelve
+import joblib
+from joblib import Parallel, Shelf, clear_shelf, delayed, shelve
 from joblib.shelf import ShelfFuture, _futures
 from joblib.testing import parametrize, raises
 
@@ -12,6 +14,8 @@ def test_shelve(data):
     id = (future.location, future.id)
     assert id in _futures
     assert _futures[id] == data
+    clear_shelf()
+    assert len(os.listdir(joblib.shelf._shelf.store_backend.location)) == 1
 
 
 def test_bad_shelf_access():
@@ -43,3 +47,38 @@ def test_shelve_parallel():
     expected = [sum(data[i : i + R]) for i in range(S)]
     out = Parallel(n_jobs=4)(delayed(f)(shelved_data, i) for i in range(S))
     assert out == expected
+
+
+def test_shelf(tmpdir):
+    def core(shelf):
+        shelf_location = shelf.store_backend.location
+        assert tmpdir.strpath == shelf_location
+        x, y = 42, 69
+        assert len(os.listdir(shelf_location)) == 1  # contains .gitignore
+        shelved_x = shelf.shelve(x)
+        shelf.shelve(y)
+        assert len(os.listdir(shelf_location)) == 3
+        shelved_x.clear()
+        assert len(os.listdir(shelf_location)) == 2
+        shelved_x.clear()
+        assert len(os.listdir(shelf_location)) == 2
+        with raises(KeyError, match="Non-existing item"):
+            shelved_x.result()
+        shelf.clear()
+        assert len(os.listdir(shelf_location)) == 1
+        shelf.close()
+        assert not os.path.exists(shelf_location)
+        with raises(RuntimeError, match="already closed shelf"):
+            shelf.shelve("abc")
+
+    shelf = Shelf(tmpdir.strpath)
+    core(shelf)
+    shelf.close()
+    assert not os.path.exists(tmpdir.strpath)
+    with raises(RuntimeError, match="already closed shelf"):
+        shelf.shelve("abc")
+
+    # Testing as context
+    with Shelf(tmpdir.strpath) as shelf:
+        core(shelf)
+    assert not os.path.exists(tmpdir.strpath)
