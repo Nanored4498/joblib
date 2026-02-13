@@ -3,7 +3,7 @@ import os
 import shutil
 from uuid import uuid4
 
-from ._memmapping_reducer import _get_temp_dir
+from ._tmp_dir import _get_temp_dir
 from .memory import _store_backend_factory
 
 _shelf = None
