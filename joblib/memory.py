@@ -507,7 +507,7 @@ class MemorizedFunc(Logger):
         metadata: dict containing the metadata associated with the call.
         """
         args_id = self._get_args_id(*args, **kwargs)
-        call_id = (self.func_id, args_id)
+        call_id = (self.func_id, args_id[:3], args_id[3:])
         _, func_name = get_func_name(self.func)
         func_info = self.store_backend.get_cached_func_info([self.func_id])
         location = func_info["location"]
