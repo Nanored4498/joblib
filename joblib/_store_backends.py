@@ -423,30 +423,34 @@ class FileSystemStoreBackend(StoreBackendBase, StoreBackendMixin):
         items = []
 
         for dirpath, _, filenames in os.walk(self.location):
-            is_cache_hash_dir = re.match("[a-f0-9]{32}", os.path.basename(dirpath))
+            head, tail = os.path.split(dirpath)
+            if not re.match("[a-f0-9]{29}", tail):
+                continue
+            head = os.path.basename(head)
+            if not re.match("[a-f0-9]{3}", head):
+                continue
 
-            if is_cache_hash_dir:
-                output_filename = os.path.join(dirpath, "output.pkl")
+            output_filename = os.path.join(dirpath, "output.pkl")
+            try:
+                last_access = os.path.getatime(output_filename)
+            except OSError:
                 try:
-                    last_access = os.path.getatime(output_filename)
+                    last_access = os.path.getatime(dirpath)
                 except OSError:
-                    try:
-                        last_access = os.path.getatime(dirpath)
-                    except OSError:
-                        # The directory has already been deleted
-                        continue
-
-                last_access = datetime.datetime.fromtimestamp(last_access)
-                try:
-                    full_filenames = [os.path.join(dirpath, fn) for fn in filenames]
-                    dirsize = sum(os.path.getsize(fn) for fn in full_filenames)
-                except OSError:
-                    # Either output_filename or one of the files in
-                    # dirpath does not exist any more. We assume this
-                    # directory is being cleaned by another process already
+                    # The directory has already been deleted
                     continue
 
-                items.append(CacheItemInfo(dirpath, dirsize, last_access))
+            last_access = datetime.datetime.fromtimestamp(last_access)
+            try:
+                full_filenames = [os.path.join(dirpath, fn) for fn in filenames]
+                dirsize = sum(os.path.getsize(fn) for fn in full_filenames)
+            except OSError:
+                # Either output_filename or one of the files in
+                # dirpath does not exist any more. We assume this
+                # directory is being cleaned by another process already
+                continue
+
+            items.append(CacheItemInfo(dirpath, dirsize, last_access))
 
         return items
 
