@@ -3,6 +3,10 @@ Test the shelf module.
 """
 
 import os
+import shutil
+import subprocess
+import sys
+import time
 from random import random
 
 import joblib
@@ -88,3 +92,28 @@ def test_shelf(tmpdir):
     with Shelf(tmpdir.strpath) as shelf:
         core(shelf)
     assert not os.path.exists(tmpdir.strpath)
+
+
+def test_shelf_kill():
+    # Check that the shelf is deleted when the process is killed
+    cmd = """if 1:
+    import joblib
+    import time
+    x = 42
+    sx = joblib.shelve(x)
+    print("shelved", joblib.shelf._shelf.store_backend.location, flush=True)
+    time.sleep(60)
+    """
+    p = subprocess.Popen([sys.executable, "-c", cmd], stdout=subprocess.PIPE, text=True)
+    for line in p.stdout:
+        start = "shelved "
+        assert line.startswith(start)
+        path = line[len(start) : -1]
+        p.kill()
+        for _ in range(20):
+            if not os.path.exists(path):
+                break
+            time.sleep(0.2)
+        if os.path.exists(path):
+            shutil.rmtree(path)
+            assert False, "Shelf folder not deleted after process kill"
