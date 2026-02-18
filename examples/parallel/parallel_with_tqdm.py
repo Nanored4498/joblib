@@ -1,7 +1,7 @@
 """
-====================================
-How to use tqdm with joblib.Parallel
-====================================
+=================================================
+Using tqdm to track progress with joblib.Parallel
+=================================================
 
 This example illustrates how to use a ``tqdm`` progress bar together with
 :class:`joblib.Parallel`.
