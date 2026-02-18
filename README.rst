@@ -87,6 +87,7 @@ Running the test suite
 To run the test suite, you need the pytest (version >= 3) and coverage modules.
 Run the test suite using::
 
+    pip install joblib[test]
     pytest joblib
 
 from the root of the project.
