@@ -8,6 +8,16 @@ from .memory import _store_backend_factory
 
 _shelf = None
 _futures = dict()
+_resource_tracker = None
+
+
+def _get_ressource_tracker():
+    global _resource_tracker
+    if _resource_tracker is None:
+        from .externals.loky.backend import resource_tracker
+
+        _resource_tracker = resource_tracker
+    return _resource_tracker
 
 
 class ShelfFuture(object):
@@ -50,7 +60,9 @@ class Shelf(object):
             verbose=1,
             backend_options=dict(**backend_options),
         )
-        atexit.register(self.close)
+        if self.store_backend is not None:
+            _get_ressource_tracker().register(self.store_backend.location, "folder")
+            atexit.register(self.close)
 
     def shelve(self, data):
         """Add data to the Shelf and returns a future on the shelved data."""
@@ -73,6 +85,7 @@ class Shelf(object):
         It is no longer possible to add data to the shelf."""
         if self.store_backend is not None:
             shutil.rmtree(self.store_backend.location)
+            _get_ressource_tracker().unregister(self.store_backend.location, "folder")
             self.store_backend = None
 
     def __enter__(self):
