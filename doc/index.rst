@@ -1,13 +1,15 @@
+:html_theme.sidebar_secondary.remove:
+
 .. container::
 
    .. image:: _static/joblib_logo.svg
       :class: only-light
-      :width: 30%
+      :width: 25%
       :align: center
 
    .. image:: _static/joblib_logo_dark.svg
       :class: only-dark
-      :width: 30%
+      :width: 25%
       :align: center
 
    .. rubric:: Version |release|
