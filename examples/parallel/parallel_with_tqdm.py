@@ -111,8 +111,8 @@ print(*tqdm(out, total=len(times)))
 # the second and third tasks have already completed as well, since
 # 2 + 3 < 7. This explains the jump from 1/7 to 4/7.
 #
-# Note also that we must provide total=len(times) to tqdm, as the generator
-# returned by :class:~joblib.Parallel does not define a length, unlike a list.
+# Note also that we must provide ``total=len(times)`` to ``tqdm``, as the generator
+# returned by :class:`~joblib.Parallel` does not define a length, unlike a ``list``.
 #
 # .. warning::
 #
