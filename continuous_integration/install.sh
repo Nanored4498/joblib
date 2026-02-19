@@ -71,7 +71,7 @@ fi
 
 
 if [[ "$CYTHON" == "true" ]]; then
-    pip install cython
+    pip install cython setuptools
     cd joblib/test/_openmp_test_helper
     python setup.py build_ext -i
     cd ../../..
