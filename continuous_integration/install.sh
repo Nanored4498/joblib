@@ -23,7 +23,7 @@ create_new_conda_env() {
         CLOUDPICKLE="cloudpickle==$OLDEST_CLOUDPICKLE_VERSION"
         NUMPY="numpy==$OLDEST_NUMPY_VERSION"
         DISTRIBUTED="distributed==$OLDEST_DISTRIBUTED_VERSION"
-    elif [[ $PYTHON_VERSION == "LATE" ]]; then
+    elif [[ $PYTHON_VERSION == "latest_supported" ]]; then
         PYTHON_VERSION=$LATEST_PYTHON_VERSION
     fi
     to_install="python=$PYTHON_VERSION pip pytest $EXTRA_CONDA_PACKAGES"
