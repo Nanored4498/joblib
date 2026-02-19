@@ -135,9 +135,10 @@ numpydoc_show_class_members = False
 suppress_warnings = ["image.nonlocal_uri"]
 
 ##############################################################################
-# Write version.json
+# Write versions.json
 
 # Search for stable version in CHANGES.rst
+stable = None
 with open("CHANGES.rst", "r") as f:
     lines = f.readlines()
     for line in lines:
@@ -155,7 +156,7 @@ with open("CHANGES.rst", "r") as f:
             continue
         stable = words[1]
         break
-assert stable is not None
+assert stable is not None, "Could not find any stable version in CHANGES.rst"
 
 versions_content = f"""[
 	{{
