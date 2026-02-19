@@ -18,13 +18,13 @@ create_new_conda_env() {
     if [[ $PYTHON_VERSION == free-threaded* ]]; then
         PYTHON_VERSION=${PYTHON_VERSION/free-threaded-/}
         EXTRA_CONDA_PACKAGES="python-freethreading $EXTRA_CONDA_PACKAGES"
-    elif [[ $PYTHON_VERSION == "OLD" ]]; then
-        PYTHON_VERSION=$PYTHON_OLD_VERSION
-        CLOUDPICKLE="cloudpickle==$CLOUDPICKLE_OLD_VERSION"
-        NUMPY="numpy==$NUMPY_OLD_VERSION"
-        DISTRIBUTED="distributed==$DISTRIBUTED_OLD_VERSION"
+    elif [[ $PYTHON_VERSION == "oldest_supported" ]]; then
+        PYTHON_VERSION=$OLDEST_PYTHON_VERSION
+        CLOUDPICKLE="cloudpickle==$OLDEST_CLOUDPICKLE_VERSION"
+        NUMPY="numpy==$OLDEST_NUMPY_VERSION"
+        DISTRIBUTED="distributed==$OLDEST_DISTRIBUTED_VERSION"
     elif [[ $PYTHON_VERSION == "LATE" ]]; then
-        PYTHON_VERSION=$PYTHON_LATE_VERSION
+        PYTHON_VERSION=$LATEST_PYTHON_VERSION
     fi
     to_install="python=$PYTHON_VERSION pip pytest $EXTRA_CONDA_PACKAGES"
     conda create -n testenv --yes -c conda-forge $to_install
