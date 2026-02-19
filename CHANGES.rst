@@ -4,7 +4,7 @@ Latest changes
 In development
 --------------
 
-- Python 3.9 is no more supported. The oldest supported Python version
+- Drop python 3.9 support. The oldest supported Python version
   is now Python 3.10.
   https://github.com/joblib/joblib/pull/1773
 - Unvendor cloudpickle to more quickly benefit from maintenance releases
