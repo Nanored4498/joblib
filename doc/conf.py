@@ -133,3 +133,44 @@ except IOError:
 numpydoc_show_class_members = False
 
 suppress_warnings = ["image.nonlocal_uri"]
+
+##############################################################################
+# Write version.json
+
+# Search for stable version in CHANGES.rst
+with open("CHANGES.rst", "r") as f:
+    lines = f.readlines()
+    for line in lines:
+        words = line.split()
+        if len(words) < 2:
+            continue
+        if words[0] != "Release":
+            continue
+        if len(words) == 4:
+            if words[2] not in ["-", "--"]:
+                continue
+        elif len(words) != 2:
+            continue
+        if words[1] == "Notes":
+            continue
+        stable = words[1]
+        break
+assert stable is not None
+
+versions_content = f"""[
+	{{
+		"name": "{release} (dev)",
+		"version": "{release}",
+		"url": "https://joblib.readthedocs.io/en/latest/"
+	}},
+	{{
+		"name": "{stable} (stable)",
+		"version": "{stable}",
+		"url": "https://joblib.readthedocs.io/en/stable/",
+		"preferred": true
+	}}
+]
+"""
+
+with open("_static/versions.json", "w") as f:
+    f.write(versions_content)
