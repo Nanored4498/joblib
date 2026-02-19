@@ -3,7 +3,6 @@ import os
 import shutil
 from uuid import uuid4
 
-from ._tmp_dir import _get_temp_dir
 from .memory import _store_backend_factory
 
 _shelf = None
@@ -124,6 +123,8 @@ def shelve(data):
     """
     global _shelf
     if _shelf is None:
+        from ._memmapping_reducer import _get_temp_dir
+
         location = _get_temp_dir(f"joblib_shelf_{os.getpid()}")[0]
         _shelf = Shelf(location)
     return _shelf.shelve(data)

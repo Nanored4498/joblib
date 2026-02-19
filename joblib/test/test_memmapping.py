@@ -12,15 +12,15 @@ from time import sleep
 
 import pytest
 
-import joblib._tmp_dir as jtd
+import joblib._memmapping_reducer as jmr
 from joblib._memmapping_reducer import (
     ArrayMemmapForwardReducer,
     _get_backing_memmap,
+    _get_temp_dir,
     _strided_from_memmap,
     _WeakArrayKeyMap,
     has_shareable_memory,
 )
-from joblib._tmp_dir import _get_temp_dir
 from joblib.backports import make_memmap
 from joblib.executor import _TestingMemmappingExecutor as TestExecutor
 from joblib.parallel import Parallel, delayed
@@ -923,12 +923,12 @@ def test_memmapping_pool_for_large_arrays_disabled(factory, tmpdir):
 )
 def test_memmapping_on_large_enough_dev_shm(factory):
     """Check that memmapping uses /dev/shm when possible"""
-    orig_size = jtd.SYSTEM_SHARED_MEM_FS_MIN_SIZE
+    orig_size = jmr.SYSTEM_SHARED_MEM_FS_MIN_SIZE
     try:
         # Make joblib believe that it can use /dev/shm even when running on a
         # CI container where the size of the /dev/shm is not very large (that
         # is at least 32 MB instead of 2 GB by default).
-        jtd.SYSTEM_SHARED_MEM_FS_MIN_SIZE = int(32e6)
+        jmr.SYSTEM_SHARED_MEM_FS_MIN_SIZE = int(32e6)
         p = factory(3, max_nbytes=10)
         try:
             # Check that the pool has correctly detected the presence of the
@@ -967,7 +967,7 @@ def test_memmapping_on_large_enough_dev_shm(factory):
         else:  # pragma: no cover
             raise AssertionError("temporary folder of pool was not deleted")
     finally:
-        jtd.SYSTEM_SHARED_MEM_FS_MIN_SIZE = orig_size
+        jmr.SYSTEM_SHARED_MEM_FS_MIN_SIZE = orig_size
 
 
 @with_numpy
@@ -979,11 +979,11 @@ def test_memmapping_on_large_enough_dev_shm(factory):
     ids=["multiprocessing", "loky"],
 )
 def test_memmapping_on_too_small_dev_shm(factory):
-    orig_size = jtd.SYSTEM_SHARED_MEM_FS_MIN_SIZE
+    orig_size = jmr.SYSTEM_SHARED_MEM_FS_MIN_SIZE
     try:
         # Make joblib believe that it cannot use /dev/shm unless there is
         # 42 exabytes of available shared memory in /dev/shm
-        jtd.SYSTEM_SHARED_MEM_FS_MIN_SIZE = int(42e18)
+        jmr.SYSTEM_SHARED_MEM_FS_MIN_SIZE = int(42e18)
 
         p = factory(3, max_nbytes=10)
         try:
@@ -999,7 +999,7 @@ def test_memmapping_on_too_small_dev_shm(factory):
         # The temp folder is cleaned up upon pool termination
         assert not os.path.exists(pool_temp_folder)
     finally:
-        jtd.SYSTEM_SHARED_MEM_FS_MIN_SIZE = orig_size
+        jmr.SYSTEM_SHARED_MEM_FS_MIN_SIZE = orig_size
 
 
 @with_numpy
