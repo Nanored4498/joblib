@@ -164,5 +164,7 @@ out = p((delayed(task)(t) for t in times), len(times))
 print(*out)
 
 ##############################################################################
-# This approach provides accurate progress reporting. However, it requires
-# additional code and may feel less lightweight than the previous solutions.
+# This approach provides accurate progress reporting for heterogeneous tasks,
+# without changing the reporting order. However, it requires a more complex
+# interface, so previous solutions could be used when considering simpler
+# use cases or implementation.
