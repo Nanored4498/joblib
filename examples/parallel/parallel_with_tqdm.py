@@ -47,7 +47,7 @@ def task(t):
 #     number of *completed* tasks.
 #
 # A ``tqdm`` progress bar takes an iterable as input and returns an iterable.
-# A :class:`~joblib.Parallel` call also comsumes an iterable.
+# A :class:`~joblib.Parallel` call also consumes an iterable.
 #
 # A straightforward solution is therefore to wrap the input iterable with
 # ``tqdm`` begore passing it to :class:`~joblib.Parallel`. The progress then
@@ -62,7 +62,7 @@ out = p(delayed(task)(t) for t in tqdm(times))
 print(*out)
 
 ##############################################################################
-# As can be observed, the progress bar intially jumps from 0 tasks to 4 tasks.
+# As can be observed, the progress bar initially jumps from 0 tasks to 4 tasks.
 # This is due to the ``pre_dispatch=4`` argument, which instructs
 # :class:`~joblib.Parallel` to dispatch 4 tasks at the start.
 # Afterwards, tasks are dispatched in chunks of ``n_jobs*batch_size``. In this
@@ -84,7 +84,7 @@ print(*out)
 #     This solution provides improved but still imperfect progress reporting.
 #
 # Since a :class:`~joblib.Parallel` call returns an iterable over task outputs
-# (by default, a list), one might try to wrap the returned iterable woth ``tqdm``.
+# (by default, a list), one might try to wrap the returned iterable worth ``tqdm``.
 #
 # However, since the default return type is a ``list``, all tasks must complete
 # before the list becomes available. To observe progress as tasks finish, we
