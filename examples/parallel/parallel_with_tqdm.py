@@ -34,6 +34,8 @@ backend.
 ##############################################################################
 # We first define a task that sleeps for a given amount of time and returns
 # that value. We also define a list of sleep durations that will be used.
+# Note that the tasks' duration are inhomogeneous, simulating that
+# not all tasks takes the same time to complete.
 
 import time
 
