@@ -6,30 +6,23 @@ Using tqdm to track progress with joblib.Parallel
 This example demonstrates how to use a ``tqdm`` progress bar together with
 :class:`joblib.Parallel`.
 
-We present two main approaches.
+We present three main approaches:
 
-The first approach is simple to implement but has some limitations,
-depending on what you want to display.
+1.  :ref:`solution_generator`, via ``return_as='generator'`` to update the
+    progress bar as tasks finish. This works well for homogeneous tasks but
+    has some limitations on heterogeneous ones.
+2.  :ref:`solution_unordered_generator`, which works for heterogeneous tasks,
+    but looses the tasks' order.
+3.  :ref:`solution_subclass`, which requires more codes but allow to
+    accurately report progress independently of the ``return_as`` option.
 
-The second approach provide accurate progress reporting but requires defining
-
-We present two main approaches:
-1. Using [``return_as='generator'``](#using-a-generator) to update progress
-   as the tasks become available. This works well for homogeneous
-   tasks but has some limitations on heterogeneous ones.
-2. Using [``return_as='unordered_generator'``](#using-an-unordered-generator),
-   which updates progress as the tasks finishes, but loosing the tasks' order.
-3. Using a [custom subclass](#second-approach-subclassing-joblib-parallel) of
-   :class:`~joblib.Parallel`, which requires more codes but allow to accurately
-   report progress independently of the ``return_as`` option.
-    
-Note that the ``return_as='*generator'`` is not available for the ``multiprocessing'``
+Note that the ``return_as='generator'`` is not available for the ``multiprocessing'``
 backend.
 """
 
 ##############################################################################
 # Task definition
-##############################################################################
+# ===============
 
 ##############################################################################
 # We first define a task that sleeps for a given amount of time and returns
@@ -45,9 +38,6 @@ def task(t):
 
 times = [7, 2, 3, 5, 6, 4, 1]
 
-##############################################################################
-# First Approach
-##############################################################################
 
 ##############################################################################
 # A first naive solution
@@ -87,7 +77,10 @@ print(*out)
 # of completed tasks. The following examples show how to track completed tasks.
 # instead.
 
-##############################################################################
+# %%
+#
+# .. _solution_generator:
+#
 # Using a generator
 # =================
 #
@@ -121,7 +114,10 @@ print(*tqdm(out, total=len(times)))
 # Note that we must explicitly pass ``total=len(times)`` to ``tqdm``, because
 # the returned generator does not define a length, unlike a ``list``.
 
-##############################################################################
+# %%
+#
+# .. _solution_unordered_generator:
+#
 # Using an unordered generator
 # ============================
 #
@@ -146,9 +142,12 @@ print(*tqdm(out, total=len(times)))
 # function to also return the index of the task.
 
 
-##############################################################################
-# Second Approach: Subclassing :class:`joblib.Parallel`
-##############################################################################
+# %%
+#
+# .. _solution_subclass:
+#
+# Subclassing :class:`joblib.Parallel`
+# ====================================
 
 ##############################################################################
 # The :class:`~joblib.Parallel` class provides a method
