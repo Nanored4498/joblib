@@ -55,7 +55,7 @@ times = [7, 2, 3, 5, 6, 4, 1]
 # A first naive solution
 # ======================
 #
-# .. note::
+# .. warning::
 #
 #     This solution reports the number of *dispatched* tasks, and not the
 #     number of *completed* tasks.
