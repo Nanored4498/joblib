@@ -37,13 +37,13 @@ backend.
 
 import time
 
-times = [7, 2, 3, 5, 6, 4, 1]
-
 
 def task(t):
     time.sleep(0.1 * t)
     return t
 
+
+times = [7, 2, 3, 5, 6, 4, 1]
 
 ##############################################################################
 # First Approach
