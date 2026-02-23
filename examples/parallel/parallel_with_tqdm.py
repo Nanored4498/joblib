@@ -132,7 +132,7 @@ print(*tqdm(out, total=len(times)))
 #
 # .. note::
 #
-#     This solution does not preserve the input order of the results
+#     This solution does not preserve the tasks' input order in the results
 #
 # If you do not care about the order of the outputs and want smoother
 # progress reporting, you can use ``return_as='generator_unordered'``.
