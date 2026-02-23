@@ -27,6 +27,8 @@ backend.
 ##############################################################################
 # We first define a task that sleeps for a given amount of time and returns
 # that value. We also define a list of sleep durations that will be used.
+# Note that the tasks' duration are inhomogeneous, simulating that
+# not all tasks takes the same time to complete.
 
 import time
 
@@ -43,10 +45,11 @@ times = [7, 2, 3, 5, 6, 4, 1]
 # A first naive solution
 # ======================
 #
-# .. note::
+# .. warning::
 #
 #     This solution reports the number of *dispatched* tasks, and not the
-#     number of *completed* tasks.
+#     number of *completed* tasks. It is mention for pedagogical
+#     purposes, but should not be used in practice.
 #
 # A ``tqdm`` progress bar takes an iterable as input and returns an iterable.
 # A :class:`~joblib.Parallel` call also consumes an iterable.
@@ -86,7 +89,9 @@ print(*out)
 #
 # .. note::
 #
-#     This solution provides improved but still imperfect progress reporting.
+#     This solution works for homogeneous tasks but update progress
+#     based on the tasks order, failing to report when a follow-up task
+#     complete while the current is still running.
 #
 # Since a :class:`~joblib.Parallel` call returns an iterable over task outputs
 # (by default, a list), one might try to wrap the returned iterable worth ``tqdm``.
@@ -123,7 +128,7 @@ print(*tqdm(out, total=len(times)))
 #
 # .. note::
 #
-#     This solution does not preserve the input order of the results
+#     This solution does not preserve the tasks' input order in the results
 #
 # If you do not care about the order of the outputs and want smoother
 # progress reporting, you can use ``return_as='generator_unordered'``.
