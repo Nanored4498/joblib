@@ -96,7 +96,9 @@ print(*out)
 #
 # .. note::
 #
-#     This solution provides improved but still imperfect progress reporting.
+#     This solution works for homogeneous tasks but update progress
+#     based on the tasks order, failing to report when a follow-up task
+#     complete while the current is still running.
 #
 # Since a :class:`~joblib.Parallel` call returns an iterable over task outputs
 # (by default, a list), one might try to wrap the returned iterable worth ``tqdm``.
