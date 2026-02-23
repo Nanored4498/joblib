@@ -58,7 +58,8 @@ times = [7, 2, 3, 5, 6, 4, 1]
 # .. warning::
 #
 #     This solution reports the number of *dispatched* tasks, and not the
-#     number of *completed* tasks.
+#     number of *completed* tasks. It is mention for pedagogical
+#     purposes, but should not be used in practice.
 #
 # A ``tqdm`` progress bar takes an iterable as input and returns an iterable.
 # A :class:`~joblib.Parallel` call also consumes an iterable.
