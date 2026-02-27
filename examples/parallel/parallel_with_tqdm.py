@@ -168,8 +168,8 @@ class ParallelTqdm(Parallel):
         return super().__call__(iterable)
 
     def print_progress(self):
-        self.tqdm.update()
-        if self.n_completed_tasks == self.tqdm.total:
+        self.tqdm.update(self.n_completed_tasks - self.tqdm.n)
+        if self._is_completed():
             self.tqdm.close()
 
 
