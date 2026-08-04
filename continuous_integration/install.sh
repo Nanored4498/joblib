@@ -5,60 +5,68 @@
 
 set -xe
 
-conda config --set solver libmamba
+CLOUDPICKLE="cloudpickle"
+NUMPY="numpy"
+DISTRIBUTED="distributed"
 
-if [[ $PYTHON_VERSION == free-threaded* ]]; then
-    PYTHON_VERSION=${PYTHON_VERSION/free-threaded-/}
-    EXTRA_CONDA_PACKAGES="python-freethreading $EXTRA_CONDA_PACKAGES"
-    FREE_THREADED="true"
-fi
+create_new_conda_env() {
+    conda config --set solver libmamba
+    # Check python version
+    if [[ $PYTHON_VERSION == free-threaded* ]]; then
+        PYTHON_VERSION=${PYTHON_VERSION/free-threaded-/}
+        EXTRA_CONDA_PACKAGES="$EXTRA_CONDA_PACKAGES python-freethreading"
+    elif [[ $PYTHON_VERSION == "oldest_supported" ]]; then
+        PYTHON_VERSION=$OLDEST_PYTHON_VERSION
+        CLOUDPICKLE="cloudpickle==$OLDEST_CLOUDPICKLE_VERSION"
+        NUMPY="numpy==$OLDEST_NUMPY_VERSION"
+        DISTRIBUTED="distributed==$OLDEST_DISTRIBUTED_VERSION"
+    elif [[ $PYTHON_VERSION == "latest_supported" ]]; then
+        PYTHON_VERSION=$LATEST_PYTHON_VERSION
+    fi
+    # sklearn_tests requires scipy
+    if [[ $SKLEARN_TESTS == "true" ]]; then
+        EXTRA_CONDA_PACKAGES="$EXTRA_CONDA_PACKAGES scipy"
+    fi
+    to_install="python=$PYTHON_VERSION pip pytest $EXTRA_CONDA_PACKAGES"
+    conda create -n testenv --yes -c conda-forge $to_install
+    conda activate testenv
+}
 
-to_install="python=$PYTHON_VERSION pip \
-    pytest pytest-timeout pytest-asyncio \
-    $EXTRA_CONDA_PACKAGES"
+create_new_conda_env
+
+# Install pytest timeout to fasten failure in deadlocking tests
+PIP_INSTALL_PACKAGES="pytest-timeout pytest-asyncio threadpoolctl"
+
+# Install cloudpickle with the correct version
+PIP_INSTALL_PACKAGES="$PIP_INSTALL_PACKAGES $CLOUDPICKLE"
 
 if [ "$NO_NUMPY" != "true" ]; then
     # We want to ensure no memory copies are performed only when numpy is
     # installed. This also ensures that we don't keep a strong dependency on
     # memory_profiler.
-    to_install="$to_install numpy memory_profiler"
-
-    # We want to test threadpool limitations only when numpy is installed
-    # and multiprocessing is used.
-    if [ "$JOBLIB_MULTIPROCESSING" != "0" ]; then
-        to_install="$to_install threadpoolctl"
+    PIP_INSTALL_PACKAGES="$PIP_INSTALL_PACKAGES memory_profiler $NUMPY"
+    # We also want to ensure that joblib can be used with and
+    # without lz4 compressor package installed.
+    if [ "$NO_LZ4" != "true" ]; then
+        PIP_INSTALL_PACKAGES="$PIP_INSTALL_PACKAGES lz4"
     fi
 fi
 
-# We also want to ensure that joblib can be used with and
-# without lz4 compressor package installed.
-if [[ $NO_LZ4 != "true" && $FREE_THREADED != "true" ]]; then
-    to_install="$to_install lz4"
-fi
-
-# sklearn_tests requires scipy
-if [[ $SKLEARN_TESTS == "true" ]]; then
-    to_install="$to_install scipy"
-fi
-
-# sklearn_tests requires cython
-if [[ $CYTHON == "true" || $SKLEARN_TESTS != "true" ]]; then
-    to_install="$to_install cython"
+if [[ $USE_DISTRIBUTED == "true" ]]; then
+    PIP_INSTALL_PACKAGES="$PIP_INSTALL_PACKAGES $DISTRIBUTED"
 fi
 
 # We do not use coverage for sklearn_tests
-if [[ $COVERAGE == "true" && $SKLEARN_TESTS != "true" ]]; then
-    to_install="$to_install coverage pytest-cov"
+if [[ "$COVERAGE" == "true" && $SKLEARN_TESTS != "true" ]]; then
+    PIP_INSTALL_PACKAGES="$PIP_INSTALL_PACKAGES coverage pytest-cov"
 fi
 
-conda create -n testenv --yes -c conda-forge $to_install
-
-conda activate testenv
-
-# When using python-freethreading, lz4 should be installed with pip
-if [[ $NO_LZ4 != "true" && $FREE_THREADED == "true" ]]; then
-    pip install lz4
+# sklearn_tests requires cython
+if [[ $CYTHON == "true" || $SKLEARN_TESTS == "true" ]]; then
+    to_install="$to_install cython"
 fi
+
+pip install $PIP_INSTALL_PACKAGES
 
 # Delete the LZMA module from the standard lib to make sure joblib has no
 # hard dependency on it:
@@ -69,6 +77,7 @@ if [[ "$NO_LZMA" == "true" ]]; then
 fi
 
 if [[ $CYTHON == "true" && $SKLEARN_TESTS != "true" ]]; then
+    pip install setuptools
     cd joblib/test/_openmp_test_helper
     python setup.py build_ext -i
     cd ../../..
