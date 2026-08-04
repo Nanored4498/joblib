@@ -58,7 +58,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
       - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@v4
         with:
           auto-activate-base: true
           auto-update-conda: true
@@ -68,7 +68,7 @@ jobs:
       - name: Generate pickle files
         run: cd joblib/test/data && bash -el generate_data.sh
       - name: Upload files
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: test-data
           path: joblib/test/data/*.pkl*
@@ -160,7 +160,7 @@ jobs:
           bash -el continuous_integration/install.sh
 
       - name: Download test files
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: test-data
           path: joblib/test/data
