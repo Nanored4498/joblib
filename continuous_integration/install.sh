@@ -63,7 +63,7 @@ fi
 
 # sklearn_tests requires cython
 if [[ $CYTHON == "true" || $SKLEARN_TESTS == "true" ]]; then
-    to_install="$to_install cython"
+    PIP_INSTALL_PACKAGES="$PIP_INSTALL_PACKAGES cython"
 fi
 
 pip install $PIP_INSTALL_PACKAGES
