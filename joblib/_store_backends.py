@@ -13,6 +13,7 @@ import time
 import uuid
 import warnings
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from pickle import PicklingError
 
 from . import numpy_pickle
@@ -504,3 +505,18 @@ class FileSystemStoreBackend(StoreBackendBase, StoreBackendMixin):
 
         self.mmap_mode = mmap_mode
         self.verbose = verbose
+
+    def _move_to_parent_directory(self):
+        dir = Path(self.location)
+        assert dir.name == "joblib"
+        new_dir = dir.parent
+        for item in dir.iterdir():
+            dest = new_dir / item.name
+            if dest.exists():
+                if dest.is_dir():
+                    shutil.rmtree(dest)
+                else:
+                    dest.unlink()
+            shutil.move(str(item), str(dest))
+        dir.rmdir()
+        self.location = str(new_dir)

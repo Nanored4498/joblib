@@ -1043,7 +1043,18 @@ class Memory(Logger):
 
         self.location = location
         if isinstance(location, str):
-            location = os.path.join(location, "joblib")
+            new_location = os.path.join(location, "joblib")
+            if os.path.exists(new_location):
+                warnings.warn(
+                    f"Memory({location!r}) is using the already existing "
+                    f"store_backend at {new_location!r}.\n"
+                    "Starting with joblib 1.8, the store_backend will no longer "
+                    "be located in the 'joblib' subfolder.\n"
+                    f"Please run Memory({location!r}).update_store_backend_location() "
+                    "to move the store_backend to the correct location."
+                )
+                location = new_location
+                self.use_joblib_folder = True
 
         self.store_backend = _store_backend_factory(
             backend,
@@ -1216,6 +1227,19 @@ class Memory(Logger):
         if self.store_backend is None:
             return func(*args, **kwargs)
         return self.cache(func)(*args, **kwargs)
+
+    # XXX: To remove in joblib 1.8
+    def update_store_backend_location(self):
+        if not getattr(self, "use_joblib_folder", False):
+            return
+        try:
+            self.store_backend._move_to_parent_directory()
+            self.location = os.path.dirname(self.location)
+            self.use_joblib_folder = False
+        except Exception as e:
+            warnings.warn(
+                f"Failed to update memory location with error:\n{type(e).__name__}: {e}"
+            )
 
     # ------------------------------------------------------------------------
     # Private `object` interface
