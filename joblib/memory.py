@@ -1234,7 +1234,6 @@ class Memory(Logger):
             return
         try:
             self.store_backend._move_to_parent_directory()
-            self.location = os.path.dirname(self.location)
             self.use_joblib_folder = False
         except Exception as e:
             warnings.warn(

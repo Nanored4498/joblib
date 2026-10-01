@@ -18,6 +18,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import warnings
 from pathlib import Path
 
 import pytest
@@ -1527,6 +1528,43 @@ def test_info_log(tmpdir, caplog):
     _ = f(x)
     assert "Querying" not in caplog.text
     caplog.clear()
+
+
+def test_memory_path(tmpdir):
+    # Create an old path cache
+    with warnings.catch_warnings(record=True) as ws:
+        mem = Memory(tmpdir.join("joblib").strpath)
+        assert len(ws) == 0
+    mem.cache(f)(0)
+
+    def test(mem):
+        assert len(mem.store_backend.get_items()) == 1
+        mem.cache(f)(0)
+        assert len(mem.store_backend.get_items()) == 1
+
+    # Create memory where an old one already exists
+    with warns(
+        UserWarning,
+        match="store_backend will no longer be located in the 'joblib' subfolder",
+    ):
+        mem2 = Memory(tmpdir.strpath)
+    test(mem2)
+
+    # Update the path
+    with warnings.catch_warnings(record=True) as ws:
+        mem2.update_store_backend_location()
+        assert len(ws) == 0, ws[0].message
+    assert mem2.location == tmpdir.strpath
+    assert mem2.store_backend.location == tmpdir.strpath
+    test(mem2)
+
+    # Retry to update
+
+    # Recreate and assert no warnings is raised this time
+    with warnings.catch_warnings(record=True) as ws:
+        mem3 = Memory(tmpdir.strpath)
+        assert len(ws) == 0
+    test(mem3)
 
 
 class TestCacheValidationCallback:

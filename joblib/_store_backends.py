@@ -510,6 +510,7 @@ class FileSystemStoreBackend(StoreBackendBase, StoreBackendMixin):
         dir = Path(self.location)
         assert dir.name == "joblib"
         new_dir = dir.parent
+        # XXX: If item.name == "joblib" then we delete the old cache...
         for item in dir.iterdir():
             dest = new_dir / item.name
             if dest.exists():
